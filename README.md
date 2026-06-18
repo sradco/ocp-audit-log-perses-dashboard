@@ -6,6 +6,7 @@ A Perses dashboard for viewing OpenShift Kubernetes API audit logs using Loki as
 
 - OpenShift cluster with [Cluster Observability Operator](https://docs.openshift.com/container-platform/latest/observability/cluster_observability_operator/cluster-observability-operator-overview.html) (Perses)
 - [OpenShift Logging](https://docs.openshift.com/container-platform/latest/observability/logging/cluster-logging.html) with LokiStack collecting audit logs
+- Recommended: [Audit log filtering](docs/loki-audit-filter.md) to reduce log volume before collection
 
 ## Deploy
 
@@ -44,6 +45,19 @@ See [perses/perses#4143](https://github.com/perses/perses/issues/4143) for featu
 4. **No dynamic dropdowns from Loki** — No LokiLogQueryVariable plugin
 5. **No CSV/Excel export**
 6. **Limited result count** — No configurable limit or pagination (Loki default ~100 entries)
+
+## Go SDK
+
+The dashboard can also be built programmatically using the [Perses Go SDK](go-sdk/main.go):
+
+```bash
+cd go-sdk
+go run . > ../deploy/dashboard.json
+```
+
+## Docs
+
+- [Recommended Loki audit log filtering](docs/loki-audit-filter.md) — ClusterLogForwarder filters to reduce volume by ~95%
 
 ## LogQL Query
 
