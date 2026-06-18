@@ -1,0 +1,17 @@
+apiVersion: perses.dev/v1alpha2
+kind: PersesDatasource
+metadata:
+  name: loki-audit-datasource
+  namespace: perses-dev
+spec:
+  config:
+    default: true
+    display:
+      name: OpenShift Audit Logs (Loki)
+    plugin:
+      kind: LokiDatasource
+      spec:
+        proxy:
+          kind: HTTPProxy
+          spec:
+            url: http://loki-tls-proxy.perses-dev.svc.cluster.local:8080/api/logs/v1/audit

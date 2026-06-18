@@ -1,0 +1,199 @@
+apiVersion: perses.dev/v1alpha2
+kind: PersesDashboard
+metadata:
+  name: ocp-user-audit-viewer
+  namespace: perses-dev
+spec:
+  config:
+    display:
+      description: Kube-apiserver audit events for real users, powered by Loki
+      name: OCP User Audit Viewer
+    duration: 1h
+    layouts:
+    - kind: Grid
+      spec:
+        items:
+        - content:
+            $ref: '#/spec/panels/auditEventsTable'
+          height: 20
+          'true': 0
+          width: 24
+          x: 0
+    panels:
+      auditEventsTable:
+        kind: Panel
+        spec:
+          plugin:
+            kind: LogsTable
+            spec:
+              enableDetails: true
+              showTime: true
+          queries:
+          - kind: LogQuery
+            spec:
+              plugin:
+                kind: LokiLogQuery
+                spec:
+                  query: "{log_type=\"audit\"}\n  | json\n  | log_source=\"kubeAPI\"\
+                    \n  | user_username!~\"${exclude_sa}\"\n  | user_username=~\"\
+                    (?i).*${username}.*\"\n  | verb=~\"${verb}\"\n  | objectRef_resource=~\"\
+                    .*${resource}.*\"\n  | objectRef_namespace=~\".*${namespace}.*\"\
+                    \n  | objectRef_name=~\"(?i).*${resource_name}.*\"\n  | responseStatus_code=~\"\
+                    ${response_code}\"\n  | userAgent=~\".*${client}.*\"\n  | line_format\
+                    \ \"User={{.user_username}} | Verb={{.verb}} | Namespace={{.objectRef_namespace}}\
+                    \ | Resource={{.objectRef_resource}}/{{.objectRef_name}} | Status={{.responseStatus_code}}\
+                    \ | Client={{.userAgent}}\""
+    refreshInterval: 30s
+    variables:
+    - kind: TextVariable
+      spec:
+        display:
+          description: Filter by username (partial match, case-insensitive)
+          name: Username
+        name: username
+        value: ''
+    - kind: ListVariable
+      spec:
+        allowAllValue: true
+        allowMultiple: true
+        customAllValue: system:.*
+        display:
+          description: Deselect to allow specific system users back
+          name: Exclude System Users
+        name: exclude_sa
+        plugin:
+          kind: StaticListVariable
+          spec:
+            values:
+            - label: system:serviceaccount:*
+              value: system:serviceaccount:.*
+            - label: system:node:*
+              value: system:node:.*
+            - label: system:kube-*
+              value: system:kube.*
+            - label: system:openshift-*
+              value: system:openshift.*
+            - label: system:apiserver
+              value: system:apiserver
+            - label: system:aggregator
+              value: system:aggregator
+            - label: system:open-cluster-management:*
+              value: system:open-cluster-management:.*
+            - label: system:ovn-node:*
+              value: system:ovn-node:.*
+            - label: system:authenticated
+              value: system:authenticated.*
+            - label: system:unauthenticated
+              value: system:unauthenticated.*
+            - label: system:monitoring
+              value: system:monitoring.*
+            - label: system:master
+              value: system:master.*
+            - label: system:admin
+              value: system:admin
+    - kind: ListVariable
+      spec:
+        allowAllValue: true
+        allowMultiple: true
+        customAllValue: .*
+        display:
+          description: Filter by API verb
+          name: Verb
+        name: verb
+        plugin:
+          kind: StaticListVariable
+          spec:
+            values:
+            - label: create
+              value: create
+            - label: update
+              value: update
+            - label: patch
+              value: patch
+            - label: delete
+              value: delete
+            - label: get
+              value: get
+            - label: list
+              value: list
+    - kind: TextVariable
+      spec:
+        display:
+          description: Resource type (e.g. pods, deployments)
+          name: Resource
+        name: resource
+        value: ''
+    - kind: TextVariable
+      spec:
+        display:
+          description: Filter by namespace
+          name: Namespace
+        name: namespace
+        value: ''
+    - kind: TextVariable
+      spec:
+        display:
+          description: Filter by resource name (partial match)
+          name: Resource Name
+        name: resource_name
+        value: ''
+    - kind: ListVariable
+      spec:
+        allowAllValue: true
+        allowMultiple: false
+        customAllValue: .*
+        display:
+          description: Filter by HTTP response code
+          name: Response Code
+        name: response_code
+        plugin:
+          kind: StaticListVariable
+          spec:
+            values:
+            - label: '200'
+              value: '200'
+            - label: '201'
+              value: '201'
+            - label: '204'
+              value: '204'
+            - label: '304'
+              value: '304'
+            - label: '400'
+              value: '400'
+            - label: '401'
+              value: '401'
+            - label: '403'
+              value: '403'
+            - label: '404'
+              value: '404'
+            - label: '409'
+              value: '409'
+            - label: '422'
+              value: '422'
+            - label: '500'
+              value: '500'
+            - label: '503'
+              value: '503'
+    - kind: ListVariable
+      spec:
+        allowAllValue: true
+        allowMultiple: false
+        customAllValue: .*
+        display:
+          description: Filter by client type
+          name: Client
+        name: client
+        plugin:
+          kind: StaticListVariable
+          spec:
+            values:
+            - label: oc CLI
+              value: oc/
+            - label: kubectl
+              value: kubectl/
+            - label: Browser
+              value: Mozilla
+            - label: OpenShift Console
+              value: openshift-console
+            - label: Prometheus
+              value: Prometheus
