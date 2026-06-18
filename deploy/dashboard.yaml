@@ -43,7 +43,7 @@ spec:
                     \ \"User={{.user_username}} | Verb={{.verb}} | Namespace={{.objectRef_namespace}}\
                     \ | Resource={{.objectRef_resource}}/{{.objectRef_name}} | Status={{.responseStatus_code}}\
                     \ | Client={{.userAgent}}\""
-    refreshInterval: 30s
+    refreshInterval: 0s
     variables:
     - kind: TextVariable
       spec:
@@ -57,6 +57,8 @@ spec:
         allowAllValue: true
         allowMultiple: true
         customAllValue: system:.*
+        defaultValue:
+        - $__all
         display:
           description: Deselect to allow specific system users back
           name: Exclude System Users
@@ -74,9 +76,9 @@ spec:
             - label: system:openshift-*
               value: system:openshift.*
             - label: system:apiserver
-              value: system:apiserver
+              value: system:apiserver.*
             - label: system:aggregator
-              value: system:aggregator
+              value: system:aggregator.*
             - label: system:open-cluster-management:*
               value: system:open-cluster-management:.*
             - label: system:ovn-node:*
@@ -89,13 +91,15 @@ spec:
               value: system:monitoring.*
             - label: system:master
               value: system:master.*
-            - label: system:admin
-              value: system:admin
+            - label: system:multus:*
+              value: system:multus.*
     - kind: ListVariable
       spec:
         allowAllValue: true
         allowMultiple: true
         customAllValue: .*
+        defaultValue:
+        - $__all
         display:
           description: Filter by API verb
           name: Verb
@@ -142,6 +146,8 @@ spec:
         allowAllValue: true
         allowMultiple: false
         customAllValue: .*
+        defaultValue:
+        - $__all
         display:
           description: Filter by HTTP response code
           name: Response Code
@@ -179,6 +185,8 @@ spec:
         allowAllValue: true
         allowMultiple: false
         customAllValue: .*
+        defaultValue:
+        - $__all
         display:
           description: Filter by client type
           name: Client
