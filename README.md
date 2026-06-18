@@ -7,35 +7,25 @@ A Perses dashboard for viewing OpenShift Kubernetes API audit logs using Loki as
 - OpenShift cluster with [Cluster Observability Operator](https://docs.openshift.com/container-platform/latest/observability/cluster_observability_operator/cluster-observability-operator-overview.html) (Perses)
 - [OpenShift Logging](https://docs.openshift.com/container-platform/latest/observability/logging/cluster-logging.html) with LokiStack collecting audit logs
 
-## Architecture
-
-```
-User → OpenShift Console (monitoring-console-plugin) → Perses Server → loki-tls-proxy (Nginx) → Loki Gateway
-```
-
-The TLS proxy is a workaround for Perses not dynamically reloading certificates when service-serving CAs rotate.
-
 ## Deploy
 
 ```bash
-# Create namespace
+# Create namespace (or use an existing one)
 oc new-project perses-dev
-
-# Deploy TLS proxy (workaround for Perses ↔ Loki TLS)
-oc apply -f deploy/proxy-configmap.yaml
-oc apply -f deploy/proxy-deployment.yaml
-oc apply -f deploy/proxy-service.yaml
 
 # Deploy datasource and dashboard
 oc apply -f deploy/datasource.yaml
 oc apply -f deploy/dashboard.yaml
 ```
 
+The datasource connects directly to the Loki gateway at:
+`https://logging-loki-gateway-http.openshift-logging.svc.cluster.local:8080/api/logs/v1/audit`
+
 ## Filters
 
 | Filter | Type | Description |
 |--------|------|-------------|
-| Username | Free text | Partial match, case-insensitive |
+| Username | Free text | Partial match, case-insensitive. Supports regex (e.g. `sradco\|ocohen`) |
 | Exclude System Users | Multi-select dropdown | Deselect to allow specific system users back |
 | Verb | Multi-select dropdown | create, update, patch, delete, get, list |
 | Resource | Free text | Kubernetes resource type |
@@ -50,7 +40,7 @@ See [perses/perses#4143](https://github.com/perses/perses/issues/4143) for featu
 
 1. **No column view** — Log fields shown as formatted text, not separate columns
 2. **No value mapping** — Can't translate status codes/user agents to friendly labels
-3. **No regex in text filters** — Text inputs don't support pattern matching
+3. **No regex in text filters** — Text inputs don't support explicit regex mode
 4. **No dynamic dropdowns from Loki** — No LokiLogQueryVariable plugin
 5. **No CSV/Excel export**
 6. **Limited result count** — No configurable limit or pagination (Loki default ~100 entries)
