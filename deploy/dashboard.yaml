@@ -93,7 +93,7 @@ spec:
       spec:
         allowAllValue: true
         allowMultiple: true
-        customAllValue: system:.*
+        customAllValue: system:serviceaccount:.*|system:node:.*|system:kube.*|system:openshift.*|system:apiserver.*|system:aggregator.*|system:open-cluster-management:.*|system:ovn-node:.*|system:authenticated.*|system:unauthenticated.*|system:monitoring.*|system:master.*|system:multus.*
         defaultValue:
         - $__all
         display:

@@ -80,7 +80,7 @@ func main() {
 				listvariable.Description("Deselect to allow specific system users back"),
 				listvariable.AllowAllValue(true),
 				listvariable.AllowMultiple(true),
-				listvariable.CustomAllValue("system:.*"),
+				listvariable.CustomAllValue("system:serviceaccount:.*|system:node:.*|system:kube.*|system:openshift.*|system:apiserver.*|system:aggregator.*|system:open-cluster-management:.*|system:ovn-node:.*|system:authenticated.*|system:unauthenticated.*|system:monitoring.*|system:master.*|system:multus.*"),
 				listvariable.DefaultValue("$__all"),
 			),
 		),
