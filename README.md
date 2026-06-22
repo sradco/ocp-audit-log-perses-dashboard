@@ -33,18 +33,12 @@ The datasource connects directly to the Loki gateway at:
 | Namespace | Free text | Target namespace |
 | Resource Name | Free text | Partial match, case-insensitive |
 | Response Code | Dropdown | HTTP status codes |
-| Client | Dropdown | User agent type |
 
 ## Known Limitations
 
-See [perses/perses#4143](https://github.com/perses/perses/issues/4143) for feature requests:
+See [perses/perses#4143](https://github.com/perses/perses/issues/4143) for upstream feature requests.
 
-1. **No column view** — Log fields shown as formatted text, not separate columns
-2. **No value mapping** — Can't translate status codes/user agents to friendly labels
-3. **No regex in text filters** — Text inputs don't support explicit regex mode
-4. **No dynamic dropdowns from Loki** — No LokiLogQueryVariable plugin
-5. **No CSV/Excel export**
-6. **Limited result count** — No configurable limit or pagination (Loki default ~100 entries)
+Current limitations and planned improvements are tracked in [issue #1](../../issues/1).
 
 ## Go SDK
 
@@ -72,6 +66,5 @@ go run . > ../deploy/dashboard.json
   | objectRef_namespace=~".*${namespace}.*"
   | objectRef_name=~"(?i).*${resource_name}.*"
   | responseStatus_code=~"${response_code}"
-  | userAgent=~".*${client}.*"
-  | line_format "User={{.user_username}} | Verb={{.verb}} | Namespace={{.objectRef_namespace}} | Resource={{.objectRef_resource}}/{{.objectRef_name}} | Status={{.responseStatus_code}} | Client={{.userAgent}}"
+  | line_format "User={{.user_username}} | Verb={{.verb}} | Namespace={{.objectRef_namespace}} | Resource={{.objectRef_resource}} | Resource Name={{.objectRef_name}} | Status={{.responseStatus_code}} | Client={{.userAgent}}"
 ```

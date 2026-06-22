@@ -39,9 +39,9 @@ spec:
                     (?i).*${username}.*\"\n  | verb=~\"${verb}\"\n  | objectRef_resource=~\"\
                     .*${resource}.*\"\n  | objectRef_namespace=~\".*${namespace}.*\"\
                     \n  | objectRef_name=~\"(?i).*${resource_name}.*\"\n  | responseStatus_code=~\"\
-                    ${response_code}\"\n  | userAgent=~\".*${client}.*\"\n  | line_format\
+                    ${response_code}\"\n  | line_format\
                     \ \"User={{.user_username}} | Verb={{.verb}} | Namespace={{.objectRef_namespace}}\
-                    \ | Resource={{.objectRef_resource}}/{{.objectRef_name}} | Status={{.responseStatus_code}}\
+                    \ | Resource={{.objectRef_resource}} | Resource Name={{.objectRef_name}} | Status={{.responseStatus_code}}\
                     \ | Client={{.userAgent}}\""
     refreshInterval: 0s
     variables:
@@ -180,28 +180,3 @@ spec:
               value: '500'
             - label: '503'
               value: '503'
-    - kind: ListVariable
-      spec:
-        allowAllValue: true
-        allowMultiple: false
-        customAllValue: .*
-        defaultValue:
-        - $__all
-        display:
-          description: Filter by client type
-          name: Client
-        name: client
-        plugin:
-          kind: StaticListVariable
-          spec:
-            values:
-            - label: oc CLI
-              value: oc/
-            - label: kubectl
-              value: kubectl/
-            - label: Browser
-              value: Mozilla
-            - label: OpenShift Console
-              value: openshift-console
-            - label: Prometheus
-              value: Prometheus

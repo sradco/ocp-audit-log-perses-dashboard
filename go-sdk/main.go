@@ -28,8 +28,7 @@ const (
   | objectRef_namespace=~".*${namespace}.*"
   | objectRef_name=~"(?i).*${resource_name}.*"
   | responseStatus_code=~"${response_code}"
-  | userAgent=~".*${client}.*"
-  | line_format "User={{.user_username}} | Verb={{.verb}} | Namespace={{.objectRef_namespace}} | Resource={{.objectRef_resource}}/{{.objectRef_name}} | Status={{.responseStatus_code}} | Client={{.userAgent}}"
+  | line_format "User={{.user_username}} | Verb={{.verb}} | Namespace={{.objectRef_namespace}} | Resource={{.objectRef_resource}} | Resource Name={{.objectRef_name}} | Status={{.responseStatus_code}} | Client={{.userAgent}}"
 `
 )
 
@@ -112,18 +111,6 @@ func main() {
 				),
 				listvariable.DisplayName("Response Code"),
 				listvariable.Description("Filter by HTTP response code"),
-				listvariable.AllowAllValue(true),
-				listvariable.CustomAllValue(".*"),
-				listvariable.DefaultValue("$__all"),
-			),
-		),
-		dashboard.AddVariable("client",
-			listvariable.List(
-				staticlist.StaticList(
-					staticlist.Values("oc/", "kubectl/", "Mozilla", "openshift-console", "Prometheus"),
-				),
-				listvariable.DisplayName("Client"),
-				listvariable.Description("Filter by client type"),
 				listvariable.AllowAllValue(true),
 				listvariable.CustomAllValue(".*"),
 				listvariable.DefaultValue("$__all"),
