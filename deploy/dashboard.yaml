@@ -14,11 +14,18 @@ spec:
       spec:
         items:
         - content:
+            $ref: '#/spec/panels/queryDisplay'
+          height: 2
+          width: 24
+          x: 0
+          y: 0
+        - content:
             $ref: '#/spec/panels/auditEventsTable'
           height: 20
           'true': 0
           width: 24
           x: 0
+          y: 4
     panels:
       auditEventsTable:
         kind: Panel
@@ -36,13 +43,25 @@ spec:
                 spec:
                   query: "{log_type=\"audit\"}\n  | json\n  | log_source=\"kubeAPI\"\
                     \n  | user_username=~\"${hide_unauth}\"\n  | user_username!~\"\
-                    ${exclude_sa}\"\n  | user_username=~\"(?i).*${username}.*\"\n  |\
-                    \ verb=~\"${verb}\"\n  | objectRef_resource=~\".*${resource}.*\"\
+                    ${exclude_sa}\"\n  | user_username=~\"(?i).*${username}.*\"\n\
+                    \  | verb=~\"${verb}\"\n  | objectRef_resource=~\".*${resource}.*\"\
                     \n  | objectRef_namespace=~\".*${namespace}.*\"\n  | objectRef_name=~\"\
                     (?i).*${resource_name}.*\"\n  | responseStatus_code=~\"${response_code}\"\
-                    \n  | line_format \"User={{.user_username}} | Verb={{.verb}} | Namespace={{.objectRef_namespace}}\
-                    \ | Resource={{.objectRef_resource}} | Resource Name={{.objectRef_name}}\
-                    \ | Status={{.responseStatus_code}} | Client={{.userAgent}}\""
+                    \n  | line_format \"User={{.user_username}} | Verb={{.verb}} |\
+                    \ Namespace={{.objectRef_namespace}} | Resource={{.objectRef_resource}}\
+                    \ | Resource Name={{.objectRef_name}} | Status={{.responseStatus_code}}\
+                    \ | Client={{.userAgent}}\""
+      queryDisplay:
+        kind: Panel
+        spec:
+          plugin:
+            kind: Markdown
+            spec:
+              text: 'Active Query: `{log_type="audit"} | json | log_source="kubeAPI"
+                | user_username=~"${hide_unauth}" | user_username!~"${exclude_sa}"
+                | user_username=~"(?i).*${username}.*" | verb=~"${verb}" | objectRef_resource=~".*${resource}.*"
+                | objectRef_namespace=~".*${namespace}.*" | objectRef_name=~"(?i).*${resource_name}.*"
+                | responseStatus_code=~"${response_code}"`'
     refreshInterval: 0s
     variables:
     - kind: TextVariable
