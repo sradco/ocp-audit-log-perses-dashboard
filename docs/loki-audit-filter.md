@@ -2,15 +2,66 @@
 
 By default, Kubernetes API audit logs are extremely verbose — most entries come from service accounts, node heartbeats, and watch/proxy operations. Filtering at the collection layer reduces Loki storage costs and improves query performance.
 
-## ClusterLogForwarder Filter Configuration
+## Option A: Add to an Existing ClusterLogForwarder
 
-Add the following filters to your `ClusterLogForwarder` to drop noise before it reaches Loki:
+If you already have a `ClusterLogForwarder` with a `kubeAPIAudit` policy filter (common in OpenShift), add `type: drop` filters to catch events the policy misses (e.g. unauthenticated requests with empty usernames, non-complete stages):
+
+```bash
+oc edit clusterlogforwarders.observability.openshift.io <name> -n openshift-logging
+```
+
+Add the filters to your existing `spec.filters` section:
+
+```yaml
+spec:
+  filters:
+    # ... your existing filters (e.g. audit-policy) ...
+
+    # Drop unauthenticated requests (no user identity, typically 401s)
+    - name: drop-unauthenticated
+      type: drop
+      drop:
+        - test:
+            - field: .user.username
+              matches: "^$"
+
+    # Drop non-complete stages (RequestReceived, ResponseStarted)
+    - name: drop-non-complete
+      type: drop
+      drop:
+        - test:
+            - field: .stage
+              notMatches: ResponseComplete
+```
+
+Then reference them in your audit pipeline's `filterRefs`:
+
+```yaml
+  pipelines:
+    - name: audit-filtered-to-loki    # your existing audit pipeline
+      inputRefs:
+        - audit
+      filterRefs:
+        - audit-policy                 # existing kubeAPIAudit filter
+        - drop-unauthenticated         # add this
+        - drop-non-complete            # add this
+      outputRefs:
+        - default-lokistack
+```
+
+Filters in `filterRefs` are applied in order — the `kubeAPIAudit` policy runs first, then `drop` filters catch anything remaining.
+
+---
+
+## Option B: Standalone ClusterLogForwarder (New Setup)
+
+If starting fresh without an existing `ClusterLogForwarder`, use this complete configuration:
 
 ```yaml
 apiVersion: observability.openshift.io/v1
 kind: ClusterLogForwarder
 metadata:
-  name: instance
+  name: collector
   namespace: openshift-logging
 spec:
   filters:
@@ -21,6 +72,14 @@ spec:
         - test:
             - field: .stage
               notMatches: ResponseComplete
+
+    # Drop unauthenticated requests (no user identity resolved, typically 401s)
+    - name: drop-unauthenticated
+      type: drop
+      drop:
+        - test:
+            - field: .user.username
+              matches: "^$"
 
     # Drop automated system users (service accounts, nodes, internal components)
     - name: drop-system-users
@@ -35,14 +94,6 @@ spec:
         - test:
             - field: .user.username
               matches: "^system:(apiserver|kube-|anonymous|unauthenticated|openshift:|aggregator|monitoring|multus)"
-
-    # Drop unauthenticated requests (no user identity resolved, typically 401s)
-    - name: drop-unauthenticated
-      type: drop
-      drop:
-        - test:
-            - field: .user.username
-              matches: "^$"
 
     # Drop high-volume verbs that rarely have security/audit value
     - name: drop-noisy-verbs
@@ -78,8 +129,10 @@ spec:
         - drop-system-users
         - drop-noisy-verbs
       outputRefs:
-        - default
+        - default-lokistack
 ```
+
+---
 
 ## What Each Filter Does
 
@@ -92,13 +145,13 @@ spec:
 
 Combined, these filters typically reduce audit log volume by **95%+** while retaining all human user activity and mutations.
 
-## Applying the Filter
+## Applying and Verifying
 
 ```bash
-# Edit the existing ClusterLogForwarder
-oc edit clusterlogforwarder instance -n openshift-logging
+# Edit existing CLF
+oc edit clusterlogforwarders.observability.openshift.io collector -n openshift-logging
 
-# Or apply from file
+# Or apply standalone from file
 oc apply -f clusterlogforwarder.yaml
 ```
 
@@ -110,7 +163,7 @@ oc get pods -n openshift-logging -l component=collector
 
 # Verify audit logs still flow (from a human user)
 oc get pods -n default  # generates an audit event
-# Then check Loki
+# Then check Loki via the dashboard or directly:
 oc exec -n openshift-logging <loki-pod> -- logcli query '{log_type="audit"}' --limit=5
 ```
 
@@ -145,7 +198,7 @@ oc exec -n openshift-logging <loki-pod> -- logcli query '{log_type="audit"}' --l
 
 ## Alignment with Dashboard
 
-The dashboard's "Exclude System Users" filter provides **display-time** filtering on top of what's already collected. The ClusterLogForwarder filters above operate at **collection-time** — events dropped here are never stored in Loki and cannot be queried.
+The dashboard's "Exclude System Users" and "Hide Unauthenticated" filters provide **display-time** filtering on top of what's already collected. The ClusterLogForwarder filters above operate at **collection-time** — events dropped here are never stored in Loki and cannot be queried.
 
 Recommended approach:
 1. Use ClusterLogForwarder filters to drop the bulk of noise (permanent, saves storage)
