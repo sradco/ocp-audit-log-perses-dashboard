@@ -36,9 +36,15 @@ The datasource connects directly to the Loki gateway at:
 
 ## Known Limitations
 
-See [perses/perses#4143](https://github.com/perses/perses/issues/4143) for upstream feature requests.
+1. **No columnar display** — log fields shown as formatted text, not separate table columns
+2. **No client filter** — user agent strings too complex for static dropdown matching
+3. **No value mapping** — can't translate status codes/user agents to friendly labels
+4. **No dynamic dropdowns** — no Loki-based variable plugin for populating filters from live data
+5. **No CSV/Excel export**
+6. **Limited result count** — no configurable limit or pagination (Loki default ~100 entries)
 
-Current limitations and planned improvements are tracked in [issue #1](../../issues/1).
+See [docs/roadmap.md](docs/roadmap.md) for detailed plans and implementation notes.
+Upstream feature request: [perses/perses#4143](https://github.com/perses/perses/issues/4143)
 
 ## Go SDK
 
@@ -52,6 +58,7 @@ go run . > ../deploy/dashboard.json
 ## Docs
 
 - [Recommended Loki audit log filtering](docs/loki-audit-filter.md) — ClusterLogForwarder filters to reduce volume by ~95%
+- [Roadmap](docs/roadmap.md) — planned improvements blocked on upstream Perses features
 
 ## LogQL Query
 
