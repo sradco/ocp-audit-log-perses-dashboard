@@ -43,8 +43,8 @@ spec:
                 spec:
                   query: "{log_type=\"audit\"}\n  | json\n  | log_source=\"kubeAPI\"\
                     \n  | user_username=~\"${hide_unauth}\"\n  | user_username!~\"\
-                    ${exclude_sa}\"\n  | user_username=~\"(?i).*${username}.*\"\n\
-                    \  | verb=~\"${verb}\"\n  | objectRef_resource=~\".*${resource}.*\"\
+                    ${exclude_sa}|${exclude_custom}\"\n  | user_username=~\"(?i).*${username}.*\"\
+                    \n  | verb=~\"${verb}\"\n  | objectRef_resource=~\".*${resource}.*\"\
                     \n  | objectRef_namespace=~\".*${namespace}.*\"\n  | objectRef_name=~\"\
                     (?i).*${resource_name}.*\"\n  | responseStatus_code=~\"${response_code}\"\
                     \n  | line_format \"User={{.user_username}} | Verb={{.verb}} |\
@@ -130,6 +130,13 @@ spec:
               value: system:master.*
             - label: system:multus:*
               value: system:multus.*
+    - kind: TextVariable
+      spec:
+        display:
+          description: Additional exclusion regex (e.g. system:hive.*|system:gardener.*)
+          name: Exclude Custom
+        name: exclude_custom
+        value: ''
     - kind: ListVariable
       spec:
         allowAllValue: true

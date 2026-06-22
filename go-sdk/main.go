@@ -22,7 +22,7 @@ const (
   | json
   | log_source="kubeAPI"
   | user_username=~"${hide_unauth}"
-  | user_username!~"${exclude_sa}"
+  | user_username!~"${exclude_sa}|${exclude_custom}"
   | user_username=~"(?i).*${username}.*"
   | verb=~"${verb}"
   | objectRef_resource=~".*${resource}.*"
@@ -82,6 +82,12 @@ func main() {
 				listvariable.AllowMultiple(true),
 				listvariable.CustomAllValue("system:serviceaccount:.*|system:node:.*|system:kube.*|system:openshift.*|system:apiserver.*|system:aggregator.*|system:open-cluster-management:.*|system:ovn-node:.*|system:authenticated.*|system:unauthenticated.*|system:monitoring.*|system:master.*|system:multus.*"),
 				listvariable.DefaultValue("$__all"),
+			),
+		),
+		dashboard.AddVariable("exclude_custom",
+			textvariable.Text("",
+				textvariable.DisplayName("Exclude Custom"),
+				textvariable.Description("Additional exclusion regex (e.g. system:hive.*|system:gardener.*)"),
 			),
 		),
 		dashboard.AddVariable("verb",
