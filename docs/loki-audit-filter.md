@@ -36,6 +36,14 @@ spec:
             - field: .user.username
               matches: "^system:(apiserver|kube-|anonymous|unauthenticated|openshift:|aggregator|monitoring|multus)"
 
+    # Drop unauthenticated requests (no user identity resolved, typically 401s)
+    - name: drop-unauthenticated
+      type: drop
+      drop:
+        - test:
+            - field: .user.username
+              matches: "^$"
+
     # Drop high-volume verbs that rarely have security/audit value
     - name: drop-noisy-verbs
       type: drop
@@ -66,6 +74,7 @@ spec:
         - audit
       filterRefs:
         - drop-non-complete
+        - drop-unauthenticated
         - drop-system-users
         - drop-noisy-verbs
       outputRefs:
@@ -77,6 +86,7 @@ spec:
 | Filter | Drops | Typical Reduction |
 |--------|-------|-------------------|
 | `drop-non-complete` | Intermediate audit stages (RequestReceived, ResponseStarted) | ~60-70% |
+| `drop-unauthenticated` | Requests with no user identity (failed auth, 401s) | ~5-10% |
 | `drop-system-users` | Service accounts, nodes, internal operators | ~80-90% of remaining |
 | `drop-noisy-verbs` | watch (long-poll), deletecollection, proxy | ~10-20% |
 

@@ -27,6 +27,7 @@ The datasource connects directly to the Loki gateway at:
 | Filter | Type | Description |
 |--------|------|-------------|
 | Username | Free text | Partial match, case-insensitive. Supports regex (e.g. `sradco\|ocohen`) |
+| Hide Unauthenticated | Dropdown (Yes/No) | Exclude events with no user identity (default: Yes) |
 | Exclude System Users | Multi-select dropdown | Deselect to allow specific system users back |
 | Verb | Multi-select dropdown | create, update, patch, delete, get, list |
 | Resource | Free text | Kubernetes resource type |
@@ -66,6 +67,7 @@ go run . > ../deploy/dashboard.json
 {log_type="audit"}
   | json
   | log_source="kubeAPI"
+  | user_username=~"${hide_unauth}"
   | user_username!~"${exclude_sa}"
   | user_username=~"(?i).*${username}.*"
   | verb=~"${verb}"

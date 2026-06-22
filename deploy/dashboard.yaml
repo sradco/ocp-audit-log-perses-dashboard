@@ -35,14 +35,14 @@ spec:
                 kind: LokiLogQuery
                 spec:
                   query: "{log_type=\"audit\"}\n  | json\n  | log_source=\"kubeAPI\"\
-                    \n  | user_username!~\"${exclude_sa}\"\n  | user_username=~\"\
-                    (?i).*${username}.*\"\n  | verb=~\"${verb}\"\n  | objectRef_resource=~\"\
-                    .*${resource}.*\"\n  | objectRef_namespace=~\".*${namespace}.*\"\
-                    \n  | objectRef_name=~\"(?i).*${resource_name}.*\"\n  | responseStatus_code=~\"\
-                    ${response_code}\"\n  | line_format\
-                    \ \"User={{.user_username}} | Verb={{.verb}} | Namespace={{.objectRef_namespace}}\
-                    \ | Resource={{.objectRef_resource}} | Resource Name={{.objectRef_name}} | Status={{.responseStatus_code}}\
-                    \ | Client={{.userAgent}}\""
+                    \n  | user_username=~\"${hide_unauth}\"\n  | user_username!~\"\
+                    ${exclude_sa}\"\n  | user_username=~\"(?i).*${username}.*\"\n  |\
+                    \ verb=~\"${verb}\"\n  | objectRef_resource=~\".*${resource}.*\"\
+                    \n  | objectRef_namespace=~\".*${namespace}.*\"\n  | objectRef_name=~\"\
+                    (?i).*${resource_name}.*\"\n  | responseStatus_code=~\"${response_code}\"\
+                    \n  | line_format \"User={{.user_username}} | Verb={{.verb}} | Namespace={{.objectRef_namespace}}\
+                    \ | Resource={{.objectRef_resource}} | Resource Name={{.objectRef_name}}\
+                    \ | Status={{.responseStatus_code}} | Client={{.userAgent}}\""
     refreshInterval: 0s
     variables:
     - kind: TextVariable
@@ -52,6 +52,24 @@ spec:
           name: Username
         name: username
         value: ''
+    - kind: ListVariable
+      spec:
+        allowAllValue: false
+        allowMultiple: false
+        defaultValue:
+        - .+
+        display:
+          description: Exclude audit events with no user identity (e.g. 401 responses)
+          name: Hide Unauthenticated
+        name: hide_unauth
+        plugin:
+          kind: StaticListVariable
+          spec:
+            values:
+            - label: 'Yes'
+              value: .+
+            - label: 'No'
+              value: .*
     - kind: ListVariable
       spec:
         allowAllValue: true
