@@ -28,8 +28,8 @@ const (
   | objectRef_namespace=~".*${namespace}.*"
   | objectRef_name=~"(?i).*${resource_name}.*"
   | responseStatus_code=~"${response_code}"
-  |~ "${filter}"
   | line_format "User={{.user_username}} | Verb={{.verb}} | Namespace={{.objectRef_namespace}} | Resource={{.objectRef_resource}} | Resource Name={{.objectRef_name}} | Status={{.responseStatus_code}} | Client={{.userAgent}}"
+  |~ "${filter}"
 `
 )
 

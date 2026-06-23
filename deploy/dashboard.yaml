@@ -46,10 +46,10 @@ spec:
                     (?i).*${username}.*\"\n  | verb=~\"${verb}\"\n  | objectRef_resource=~\"\
                     .*${resource}.*\"\n  | objectRef_namespace=~\".*${namespace}.*\"\
                     \n  | objectRef_name=~\"(?i).*${resource_name}.*\"\n  | responseStatus_code=~\"\
-                    ${response_code}\"\n  |~ \"${filter}\"\n  | line_format \"User={{.user_username}}\
+                    ${response_code}\"\n  | line_format \"User={{.user_username}}\
                     \ | Verb={{.verb}} | Namespace={{.objectRef_namespace}} | Resource={{.objectRef_resource}}\
                     \ | Resource Name={{.objectRef_name}} | Status={{.responseStatus_code}}\
-                    \ | Client={{.userAgent}}\""
+                    \ | Client={{.userAgent}}\"\n  |~ \"${filter}\""
       queryDisplay:
         kind: Panel
         spec:
@@ -60,7 +60,9 @@ spec:
                 | user_username!~"${exclude_sa}" | user_username=~"(?i).*${username}.*"
                 | verb=~"${verb}" | objectRef_resource=~".*${resource}.*" | objectRef_namespace=~".*${namespace}.*"
                 | objectRef_name=~"(?i).*${resource_name}.*" | responseStatus_code=~"${response_code}"
-                |~ "${filter}"`'
+                | line_format "User={{.user_username}} | Verb={{.verb}} | Namespace={{.objectRef_namespace}}
+                | Resource={{.objectRef_resource}} | Resource Name={{.objectRef_name}}
+                | Status={{.responseStatus_code}} | Client={{.userAgent}}" |~ "${filter}"`'
     refreshInterval: 0s
     variables:
     - kind: TextVariable
