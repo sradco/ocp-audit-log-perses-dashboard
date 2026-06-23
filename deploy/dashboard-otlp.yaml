@@ -1,0 +1,209 @@
+apiVersion: perses.dev/v1alpha2
+kind: PersesDashboard
+metadata:
+  name: ocp-audit-log-viewer-otlp
+  namespace: perses-dev
+spec:
+  config:
+    display:
+      name: OCP Audit Log Viewer (OTLP)
+    variables:
+    - kind: TextVariable
+      spec:
+        display:
+          name: Username
+          description: Filter by username (partial match, case-insensitive). Supports
+            regex.
+          hidden: false
+        value: ''
+        name: username
+    - kind: ListVariable
+      spec:
+        display:
+          name: Exclude System Users
+          description: Select None to show all users including system accounts
+          hidden: false
+        defaultValue: $__all
+        allowAllValue: true
+        allowMultiple: true
+        customAllValue: system:serviceaccount:.*|system:node:.*|system:kube.*|system:openshift.*|system:apiserver.*|system:aggregator.*|system:open-cluster-management:.*|system:ovn-node:.*|system:authenticated.*|system:unauthenticated.*|system:monitoring.*|system:master.*|system:multus.*
+        plugin:
+          kind: StaticListVariable
+          spec:
+            values:
+            - ^$
+            - system:serviceaccount:.*
+            - system:node:.*
+            - system:kube.*
+            - system:openshift.*
+            - system:apiserver.*
+            - system:aggregator.*
+            - system:open-cluster-management:.*
+            - system:ovn-node:.*
+            - system:authenticated.*
+            - system:unauthenticated.*
+            - system:monitoring.*
+            - system:master.*
+            - system:multus.*
+        name: exclude_sa
+    - kind: ListVariable
+      spec:
+        display:
+          name: Verb
+          description: Filter by API verb
+          hidden: false
+        defaultValue: $__all
+        allowAllValue: true
+        allowMultiple: true
+        customAllValue: .*
+        plugin:
+          kind: StaticListVariable
+          spec:
+            values:
+            - create
+            - update
+            - patch
+            - delete
+            - get
+            - list
+        name: verb
+    - kind: TextVariable
+      spec:
+        display:
+          name: Resource
+          description: Resource type (e.g. pods, deployments)
+          hidden: false
+        value: ''
+        name: resource
+    - kind: TextVariable
+      spec:
+        display:
+          name: Resource Name
+          description: Filter by resource name (partial match)
+          hidden: false
+        value: ''
+        name: resource_name
+    - kind: TextVariable
+      spec:
+        display:
+          name: Namespace
+          description: Filter by namespace
+          hidden: false
+        value: ''
+        name: namespace
+    - kind: ListVariable
+      spec:
+        display:
+          name: Response Code
+          description: Filter by HTTP response code
+          hidden: false
+        defaultValue: $__all
+        allowAllValue: true
+        allowMultiple: false
+        customAllValue: .*
+        plugin:
+          kind: StaticListVariable
+          spec:
+            values:
+            - '200'
+            - '201'
+            - '204'
+            - '304'
+            - '400'
+            - '401'
+            - '403'
+            - '404'
+            - '409'
+            - '422'
+            - '500'
+            - '503'
+        name: response_code
+    - kind: ListVariable
+      spec:
+        display:
+          name: Exclude Resources
+          description: Select None to show all resource types
+          hidden: false
+        defaultValue: $__all
+        allowAllValue: true
+        allowMultiple: true
+        customAllValue: events|endpoints|endpointslices|leases|tokenreviews|subjectaccessreviews|selfsubjectaccessreviews|selfsubjectrulesreviews
+        plugin:
+          kind: StaticListVariable
+          spec:
+            values:
+            - ^$
+            - events
+            - endpoints
+            - endpointslices
+            - leases
+            - tokenreviews
+            - subjectaccessreviews
+            - selfsubjectaccessreviews
+            - selfsubjectrulesreviews
+        name: exclude_resource
+    - kind: TextVariable
+      spec:
+        display:
+          name: Client
+          description: Filter by user agent (e.g. oc, kubectl, console). Partial match,
+            case-insensitive.
+          hidden: false
+        value: ''
+        name: client
+    - kind: TextVariable
+      spec:
+        display:
+          name: LogQL Filter
+          description: 'Raw LogQL stage. Examples: |~ "sradco" (include), !~ "sradco"
+            (exclude), | k8s_user_username!~"sradco.*"'
+          hidden: false
+        value: '|~ ".*"'
+        name: filter
+    panels:
+      '0_0':
+        kind: Panel
+        spec:
+          display:
+            name: Audit Logs
+          plugin:
+            kind: LogsTable
+            spec:
+              enableDetails: true
+              showTime: true
+          queries:
+          - kind: LogQuery
+            spec:
+              plugin:
+                kind: LokiLogQuery
+                spec:
+                  datasource:
+                    kind: LokiDatasource
+                    name: loki-audit-datasource
+                  query: "{log_type=\"audit\", openshift_log_source=\"kubeAPI\"}\n\
+                    \  | k8s_user_username!~\"${exclude_sa}\"\n  | k8s_user_username=~\"\
+                    (?i).*${username}.*\"\n  | k8s_audit_event_verb=~\"${verb}\"\n\
+                    \  | k8s_audit_event_object_ref_resource=~\".*${resource}.*\"\n\
+                    \  | k8s_audit_event_object_ref_resource!~\"${exclude_resource}\"\
+                    \n  | k8s_audit_event_object_ref_namespace=~\".*${namespace}.*\"\
+                    \n  | k8s_audit_event_object_ref_name=~\"(?i).*${resource_name}.*\"\
+                    \n  | k8s_audit_event_response_code=~\"${response_code}\"\n  |\
+                    \ k8s_audit_event_user_agent=~\"(?i).*${client}.*\"\n  | line_format\
+                    \ \"User={{.k8s_user_username}} | Verb={{.k8s_audit_event_verb}}\
+                    \ | Namespace={{.k8s_audit_event_object_ref_namespace}} | Resource={{.k8s_audit_event_object_ref_resource}}\
+                    \ | Resource Name={{.k8s_audit_event_object_ref_name}} | Status={{.k8s_audit_event_response_code}}\
+                    \ | Client={{.k8s_audit_event_user_agent}}\"\n  ${filter}\n"
+    layouts:
+    - kind: Grid
+      spec:
+        display:
+          title: Audit Events
+        items:
+        - x: 0
+          y: 0
+          width: 12
+          height: 8
+          content:
+            $ref: '#/spec/panels/0_0'
+    duration: 1h
+    refreshInterval: 0s
