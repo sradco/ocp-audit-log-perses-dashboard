@@ -51,6 +51,7 @@ func main() {
 			listvariable.List(
 				staticlist.StaticList(
 					staticlist.Values(
+						"^$",
 						"system:serviceaccount:.*",
 						"system:node:.*",
 						"system:kube.*",
@@ -67,7 +68,7 @@ func main() {
 					),
 				),
 				listvariable.DisplayName("Exclude System Users"),
-				listvariable.Description("Deselect to allow specific system users back"),
+				listvariable.Description("Select None to show all users including system accounts"),
 				listvariable.AllowAllValue(true),
 				listvariable.AllowMultiple(true),
 				listvariable.CustomAllValue("system:serviceaccount:.*|system:node:.*|system:kube.*|system:openshift.*|system:apiserver.*|system:aggregator.*|system:open-cluster-management:.*|system:ovn-node:.*|system:authenticated.*|system:unauthenticated.*|system:monitoring.*|system:master.*|system:multus.*"),
@@ -118,9 +119,9 @@ func main() {
 			),
 		),
 		dashboard.AddVariable("filter",
-			textvariable.Text("",
+			textvariable.Text(".*",
 				textvariable.DisplayName("LogQL Filter"),
-				textvariable.Description("Regex match on log content (e.g. secrets|Forbidden|system:hive)"),
+				textvariable.Description("Regex match on log content (e.g. secrets|Forbidden|system:hive). Use .* for all."),
 			),
 		),
 

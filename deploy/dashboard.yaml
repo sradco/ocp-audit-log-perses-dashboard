@@ -46,8 +46,8 @@ spec:
                     (?i).*${username}.*\"\n  | verb=~\"${verb}\"\n  | objectRef_resource=~\"\
                     .*${resource}.*\"\n  | objectRef_namespace=~\".*${namespace}.*\"\
                     \n  | objectRef_name=~\"(?i).*${resource_name}.*\"\n  | responseStatus_code=~\"\
-                    ${response_code}\"\n  |~ \"${filter}\"\n  | line_format \"User={{.user_username}} |\
-                    \ Verb={{.verb}} | Namespace={{.objectRef_namespace}} | Resource={{.objectRef_resource}}\
+                    ${response_code}\"\n  |~ \"${filter}\"\n  | line_format \"User={{.user_username}}\
+                    \ | Verb={{.verb}} | Namespace={{.objectRef_namespace}} | Resource={{.objectRef_resource}}\
                     \ | Resource Name={{.objectRef_name}} | Status={{.responseStatus_code}}\
                     \ | Client={{.userAgent}}\""
       queryDisplay:
@@ -58,9 +58,9 @@ spec:
             spec:
               text: 'Active Query: `{log_type="audit"} | json | log_source="kubeAPI"
                 | user_username!~"${exclude_sa}" | user_username=~"(?i).*${username}.*"
-                | verb=~"${verb}" | objectRef_resource=~".*${resource}.*"
-                | objectRef_namespace=~".*${namespace}.*" | objectRef_name=~"(?i).*${resource_name}.*"
-                | responseStatus_code=~"${response_code}" |~ "${filter}"`'
+                | verb=~"${verb}" | objectRef_resource=~".*${resource}.*" | objectRef_namespace=~".*${namespace}.*"
+                | objectRef_name=~"(?i).*${resource_name}.*" | responseStatus_code=~"${response_code}"
+                |~ "${filter}"`'
     refreshInterval: 0s
     variables:
     - kind: TextVariable
@@ -78,13 +78,15 @@ spec:
         defaultValue:
         - $__all
         display:
-          description: Deselect to allow specific system users back
+          description: Select None to show all users including system accounts
           name: Exclude System Users
         name: exclude_sa
         plugin:
           kind: StaticListVariable
           spec:
             values:
+            - label: None (exclude nobody)
+              value: ^$
             - label: system:serviceaccount:*
               value: system:serviceaccount:.*
             - label: system:node:*
@@ -201,7 +203,8 @@ spec:
     - kind: TextVariable
       spec:
         display:
-          description: Regex match on log content (e.g. secrets|Forbidden|system:hive)
+          description: Regex match on log content (e.g. secrets|Forbidden|system:hive).
+            Use .* for all.
           name: LogQL Filter
         name: filter
-        value: ''
+        value: .*
