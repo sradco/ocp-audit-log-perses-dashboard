@@ -74,12 +74,6 @@ func main() {
 				listvariable.DefaultValue("$__all"),
 			),
 		),
-		dashboard.AddVariable("filter",
-			textvariable.Text("",
-				textvariable.DisplayName("Filter (regex)"),
-				textvariable.Description("General regex filter on log content (e.g. secrets|configmaps or Forbidden)"),
-			),
-		),
 		dashboard.AddVariable("verb",
 			listvariable.List(
 				staticlist.StaticList(
@@ -121,6 +115,12 @@ func main() {
 				listvariable.AllowAllValue(true),
 				listvariable.CustomAllValue(".*"),
 				listvariable.DefaultValue("$__all"),
+			),
+		),
+		dashboard.AddVariable("filter",
+			textvariable.Text("",
+				textvariable.DisplayName("LogQL Filter"),
+				textvariable.Description("Regex match on log content (e.g. secrets|Forbidden|system:hive)"),
 			),
 		),
 

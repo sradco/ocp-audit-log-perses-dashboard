@@ -28,12 +28,12 @@ The datasource connects directly to the Loki gateway at:
 |--------|------|-------------|
 | Username | Free text | Partial match, case-insensitive. Supports regex (e.g. `sradco\|ocohen`) |
 | Exclude System Users | Multi-select dropdown | Deselect to allow specific system users back |
-| Filter (regex) | Free text | General regex match on log content (e.g. `secrets\|configmaps` or `Forbidden`) |
 | Verb | Multi-select dropdown | create, update, patch, delete, get, list |
 | Resource | Free text | Kubernetes resource type |
 | Namespace | Free text | Target namespace |
 | Resource Name | Free text | Partial match, case-insensitive |
 | Response Code | Dropdown | HTTP status codes |
+| LogQL Filter | Free text | Regex match on log content (e.g. `secrets\|Forbidden\|system:hive`) |
 
 ## Known Limitations
 
