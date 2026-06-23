@@ -154,16 +154,16 @@ spec:
     - kind: TextVariable
       spec:
         display:
-          description: Filter by namespace
-          name: Namespace
-        name: namespace
+          description: Filter by resource name (partial match)
+          name: Resource Name
+        name: resource_name
         value: ''
     - kind: TextVariable
       spec:
         display:
-          description: Filter by resource name (partial match)
-          name: Resource Name
-        name: resource_name
+          description: Filter by namespace
+          name: Namespace
+        name: namespace
         value: ''
     - kind: ListVariable
       spec:
