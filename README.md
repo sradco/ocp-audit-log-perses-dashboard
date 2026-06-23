@@ -29,7 +29,7 @@ The datasource connects directly to the Loki gateway at:
 | Username | Free text | Partial match, case-insensitive. Supports regex (e.g. `sradco\|ocohen`) |
 | Hide Unauthenticated | Dropdown (Yes/No) | Exclude events with no user identity (default: Yes) |
 | Exclude System Users | Multi-select dropdown | Deselect to allow specific system users back |
-| Exclude Users (regex) | Free text | Exclude additional users by regex (e.g. `bot-.*\|ci-runner.*\|system:hive.*`) |
+| Filter (regex) | Free text | General regex match on log content (e.g. `secrets\|configmaps` or `Forbidden`) |
 | Verb | Multi-select dropdown | create, update, patch, delete, get, list |
 | Resource | Free text | Kubernetes resource type |
 | Namespace | Free text | Target namespace |
@@ -69,12 +69,13 @@ go run . > ../deploy/dashboard.json
   | json
   | log_source="kubeAPI"
   | user_username=~"${hide_unauth}"
-  | user_username!~"${exclude_sa}|${exclude_custom}"
+  | user_username!~"${exclude_sa}"
   | user_username=~"(?i).*${username}.*"
   | verb=~"${verb}"
   | objectRef_resource=~".*${resource}.*"
   | objectRef_namespace=~".*${namespace}.*"
   | objectRef_name=~"(?i).*${resource_name}.*"
   | responseStatus_code=~"${response_code}"
+  |~ "${filter}"
   | line_format "User={{.user_username}} | Verb={{.verb}} | Namespace={{.objectRef_namespace}} | Resource={{.objectRef_resource}} | Resource Name={{.objectRef_name}} | Status={{.responseStatus_code}} | Client={{.userAgent}}"
 ```

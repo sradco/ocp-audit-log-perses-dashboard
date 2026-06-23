@@ -22,13 +22,14 @@ const (
   | json
   | log_source="kubeAPI"
   | user_username=~"${hide_unauth}"
-  | user_username!~"${exclude_sa}|${exclude_custom}"
+  | user_username!~"${exclude_sa}"
   | user_username=~"(?i).*${username}.*"
   | verb=~"${verb}"
   | objectRef_resource=~".*${resource}.*"
   | objectRef_namespace=~".*${namespace}.*"
   | objectRef_name=~"(?i).*${resource_name}.*"
   | responseStatus_code=~"${response_code}"
+  |~ "${filter}"
   | line_format "User={{.user_username}} | Verb={{.verb}} | Namespace={{.objectRef_namespace}} | Resource={{.objectRef_resource}} | Resource Name={{.objectRef_name}} | Status={{.responseStatus_code}} | Client={{.userAgent}}"
 `
 )
@@ -84,10 +85,10 @@ func main() {
 				listvariable.DefaultValue("$__all"),
 			),
 		),
-		dashboard.AddVariable("exclude_custom",
+		dashboard.AddVariable("filter",
 			textvariable.Text("",
-				textvariable.DisplayName("Exclude Users (regex)"),
-				textvariable.Description("Exclude additional users by regex pattern (e.g. bot-.*|ci-runner.*|system:hive.*)"),
+				textvariable.DisplayName("Filter (regex)"),
+				textvariable.Description("General regex filter on log content (e.g. secrets|configmaps or Forbidden)"),
 			),
 		),
 		dashboard.AddVariable("verb",
