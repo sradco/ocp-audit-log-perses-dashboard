@@ -49,7 +49,7 @@ spec:
                     ${response_code}\"\n  | line_format \"User={{.user_username}}\
                     \ | Verb={{.verb}} | Namespace={{.objectRef_namespace}} | Resource={{.objectRef_resource}}\
                     \ | Resource Name={{.objectRef_name}} | Status={{.responseStatus_code}}\
-                    \ | Client={{.userAgent}}\"\n  |~ \"${filter}\""
+                    \ | Client={{.userAgent}}\"\n  ${filter}"
       queryDisplay:
         kind: Panel
         spec:
@@ -62,7 +62,7 @@ spec:
                 | objectRef_name=~"(?i).*${resource_name}.*" | responseStatus_code=~"${response_code}"
                 | line_format "User={{.user_username}} | Verb={{.verb}} | Namespace={{.objectRef_namespace}}
                 | Resource={{.objectRef_resource}} | Resource Name={{.objectRef_name}}
-                | Status={{.responseStatus_code}} | Client={{.userAgent}}" |~ "${filter}"`'
+                | Status={{.responseStatus_code}} | Client={{.userAgent}}" ${filter}`'
     refreshInterval: 0s
     variables:
     - kind: TextVariable
@@ -205,8 +205,8 @@ spec:
     - kind: TextVariable
       spec:
         display:
-          description: Regex match on log content (e.g. secrets|Forbidden|system:hive).
-            Use .* for all.
+          description: 'Raw LogQL stage. Examples: |~ "sradco" (include), !~ "sradco"
+            (exclude), | user_username!~"sradco.*"'
           name: LogQL Filter
         name: filter
-        value: .*
+        value: '|~ ".*"'

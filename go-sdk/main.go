@@ -29,7 +29,7 @@ const (
   | objectRef_name=~"(?i).*${resource_name}.*"
   | responseStatus_code=~"${response_code}"
   | line_format "User={{.user_username}} | Verb={{.verb}} | Namespace={{.objectRef_namespace}} | Resource={{.objectRef_resource}} | Resource Name={{.objectRef_name}} | Status={{.responseStatus_code}} | Client={{.userAgent}}"
-  |~ "${filter}"
+  ${filter}
 `
 )
 
@@ -119,9 +119,9 @@ func main() {
 			),
 		),
 		dashboard.AddVariable("filter",
-			textvariable.Text(".*",
+			textvariable.Text(`|~ ".*"`,
 				textvariable.DisplayName("LogQL Filter"),
-				textvariable.Description("Regex match on log content (e.g. secrets|Forbidden|system:hive). Use .* for all."),
+				textvariable.Description(`Raw LogQL stage. Examples: |~ "sradco" (include), !~ "sradco" (exclude), | user_username!~"sradco.*"`),
 			),
 		),
 
