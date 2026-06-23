@@ -17,7 +17,6 @@ spec:
           name: Username
           description: Filter by username (partial match, case-insensitive). Supports
             regex.
-          hidden: false
         value: ''
         name: username
     - kind: ListVariable
@@ -25,7 +24,6 @@ spec:
         display:
           name: Exclude System Users
           description: Select None to show all users including system accounts
-          hidden: false
         defaultValue: $__all
         allowAllValue: true
         allowMultiple: true
@@ -54,7 +52,6 @@ spec:
         display:
           name: Verb
           description: Filter by API verb
-          hidden: false
         defaultValue: $__all
         allowAllValue: true
         allowMultiple: true
@@ -73,9 +70,8 @@ spec:
     - kind: TextVariable
       spec:
         display:
-          name: Resource
+          name: Resource Type
           description: Resource type (e.g. pods, deployments)
-          hidden: false
         value: ''
         name: resource
     - kind: TextVariable
@@ -83,7 +79,6 @@ spec:
         display:
           name: Resource Name
           description: Filter by resource name (partial match)
-          hidden: false
         value: ''
         name: resource_name
     - kind: TextVariable
@@ -91,7 +86,6 @@ spec:
         display:
           name: Namespace
           description: Filter by namespace
-          hidden: false
         value: ''
         name: namespace
     - kind: ListVariable
@@ -99,7 +93,6 @@ spec:
         display:
           name: Response Code
           description: Filter by HTTP response code
-          hidden: false
         defaultValue: $__all
         allowAllValue: true
         allowMultiple: false
@@ -126,7 +119,6 @@ spec:
         display:
           name: Exclude Resources
           description: Select None to show all resource types
-          hidden: false
         defaultValue: $__all
         allowAllValue: true
         allowMultiple: true
@@ -151,7 +143,6 @@ spec:
           name: Client
           description: Filter by user agent (e.g. oc, kubectl, console). Partial match,
             case-insensitive.
-          hidden: false
         value: ''
         name: client
     - kind: TextVariable
@@ -160,7 +151,6 @@ spec:
           name: LogQL Filter
           description: 'Raw LogQL stage. Examples: |~ "sradco" (include), !~ "sradco"
             (exclude), | k8s_user_username!~"sradco.*"'
-          hidden: false
         value: '|~ ".*"'
         name: filter
     panels:
@@ -213,8 +203,20 @@ spec:
           plugin:
             kind: Markdown
             spec:
-              text: '**Filters:** Regex supported (e.g. `username.*`, `oc|kubectl`).
-                Leave empty = match all.
+              text: '**Requires:** OpenShift Logging with OTLP data model enabled.
+
+
+                **Filters:** All text filters support regex. Leave empty = match all.
+
+                - **Username:** e.g. `admin`, `.*@example.com`, `user1|user2`
+
+                - **Resource Type:** e.g. `pods`, `deploy.*`, `configmaps|secrets`
+
+                - **Resource Name:** e.g. `my-pod.*`, `nginx`, `etcd.*`
+
+                - **Namespace:** e.g. `openshift-.*`, `my-app`, `kube-system|default`
+
+                - **Client:** e.g. `oc`, `kubectl`, `console`, `argocd`
 
 
                 **LogQL Filter:** Raw stage, e.g. `|~ "error"` (include), `!~ "health"`
@@ -232,7 +234,7 @@ spec:
         items:
         - content:
             $ref: '#/spec/panels/helpPanel'
-          height: 5
+          height: 9
           width: 24
           x: 0
           y: 0
