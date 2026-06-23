@@ -55,7 +55,9 @@ Filters in `filterRefs` are applied in order — the `kubeAPIAudit` policy runs 
 
 ## Option B: Standalone ClusterLogForwarder (New Setup)
 
-If starting fresh without an existing `ClusterLogForwarder`, use this complete configuration:
+If starting fresh without an existing `ClusterLogForwarder`, use this complete configuration.
+
+**Important:** The CLF requires `spec.serviceAccount`, `spec.outputs`, and `spec.pipelines` — omitting any of these will fail validation.
 
 ```yaml
 apiVersion: observability.openshift.io/v1
@@ -64,6 +66,29 @@ metadata:
   name: collector
   namespace: openshift-logging
 spec:
+  serviceAccount:
+    name: collector
+  managementState: Managed
+  collector:
+    resources:
+      limits:
+        memory: 16Gi
+      requests:
+        memory: 256Mi
+  outputs:
+    - name: default-lokistack
+      type: lokiStack
+      lokiStack:
+        target:
+          name: logging-loki
+          namespace: openshift-logging
+        authentication:
+          token:
+            from: serviceAccount
+      tls:
+        ca:
+          configMapName: openshift-service-ca.crt
+          key: service-ca.crt
   filters:
     # Only keep fully completed API responses (drop RequestReceived, ResponseStarted)
     - name: drop-non-complete
@@ -120,6 +145,12 @@ spec:
     #           matches: "^/(healthz|livez|readyz|version|openapi)"
 
   pipelines:
+    - name: app-infra-logs
+      inputRefs:
+        - application
+        - infrastructure
+      outputRefs:
+        - default-lokistack
     - name: audit-to-loki
       inputRefs:
         - audit
