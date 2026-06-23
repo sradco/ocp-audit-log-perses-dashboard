@@ -25,9 +25,11 @@ const (
   | user_username=~"(?i).*${username}.*"
   | verb=~"${verb}"
   | objectRef_resource=~".*${resource}.*"
+  | objectRef_resource!~"${exclude_resource}"
   | objectRef_namespace=~".*${namespace}.*"
   | objectRef_name=~"(?i).*${resource_name}.*"
   | responseStatus_code=~"${response_code}"
+  | userAgent=~"(?i).*${client}.*"
   | line_format "User={{.user_username}} | Verb={{.verb}} | Namespace={{.objectRef_namespace}} | Resource={{.objectRef_resource}} | Resource Name={{.objectRef_name}} | Status={{.responseStatus_code}} | Client={{.userAgent}}"
   ${filter}
 `
@@ -116,6 +118,35 @@ func main() {
 				listvariable.AllowAllValue(true),
 				listvariable.CustomAllValue(".*"),
 				listvariable.DefaultValue("$__all"),
+			),
+		),
+		dashboard.AddVariable("exclude_resource",
+			listvariable.List(
+				staticlist.StaticList(
+					staticlist.Values(
+						"^$",
+						"events",
+						"endpoints",
+						"endpointslices",
+						"leases",
+						"tokenreviews",
+						"subjectaccessreviews",
+						"selfsubjectaccessreviews",
+						"selfsubjectrulesreviews",
+					),
+				),
+				listvariable.DisplayName("Exclude Resources"),
+				listvariable.Description("Select None to show all resource types"),
+				listvariable.AllowAllValue(true),
+				listvariable.AllowMultiple(true),
+				listvariable.CustomAllValue("events|endpoints|endpointslices|leases|tokenreviews|subjectaccessreviews|selfsubjectaccessreviews|selfsubjectrulesreviews"),
+				listvariable.DefaultValue("$__all"),
+			),
+		),
+		dashboard.AddVariable("client",
+			textvariable.Text("",
+				textvariable.DisplayName("Client"),
+				textvariable.Description("Filter by user agent (e.g. oc, kubectl, console). Partial match, case-insensitive."),
 			),
 		),
 		dashboard.AddVariable("filter",

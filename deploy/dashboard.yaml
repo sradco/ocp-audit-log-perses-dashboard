@@ -44,9 +44,10 @@ spec:
                   query: "{log_type=\"audit\"}\n  | json\n  | log_source=\"kubeAPI\"\
                     \n  | user_username!~\"${exclude_sa}\"\n  | user_username=~\"\
                     (?i).*${username}.*\"\n  | verb=~\"${verb}\"\n  | objectRef_resource=~\"\
-                    .*${resource}.*\"\n  | objectRef_namespace=~\".*${namespace}.*\"\
-                    \n  | objectRef_name=~\"(?i).*${resource_name}.*\"\n  | responseStatus_code=~\"\
-                    ${response_code}\"\n  | line_format \"User={{.user_username}}\
+                    .*${resource}.*\"\n  | objectRef_resource!~\"${exclude_resource}\"\
+                    \n  | objectRef_namespace=~\".*${namespace}.*\"\n  | objectRef_name=~\"\
+                    (?i).*${resource_name}.*\"\n  | responseStatus_code=~\"${response_code}\"\
+                    \n  | userAgent=~\"(?i).*${client}.*\"\n  | line_format \"User={{.user_username}}\
                     \ | Verb={{.verb}} | Namespace={{.objectRef_namespace}} | Resource={{.objectRef_resource}}\
                     \ | Resource Name={{.objectRef_name}} | Status={{.responseStatus_code}}\
                     \ | Client={{.userAgent}}\"\n  ${filter}"
@@ -58,8 +59,9 @@ spec:
             spec:
               text: 'Active Query: `{log_type="audit"} | json | log_source="kubeAPI"
                 | user_username!~"${exclude_sa}" | user_username=~"(?i).*${username}.*"
-                | verb=~"${verb}" | objectRef_resource=~".*${resource}.*" | objectRef_namespace=~".*${namespace}.*"
-                | objectRef_name=~"(?i).*${resource_name}.*" | responseStatus_code=~"${response_code}"
+                | verb=~"${verb}" | objectRef_resource=~".*${resource}.*" | objectRef_resource!~"${exclude_resource}"
+                | objectRef_namespace=~".*${namespace}.*" | objectRef_name=~"(?i).*${resource_name}.*"
+                | responseStatus_code=~"${response_code}" | userAgent=~"(?i).*${client}.*"
                 | line_format "User={{.user_username}} | Verb={{.verb}} | Namespace={{.objectRef_namespace}}
                 | Resource={{.objectRef_resource}} | Resource Name={{.objectRef_name}}
                 | Status={{.responseStatus_code}} | Client={{.userAgent}}" ${filter}`'
@@ -202,6 +204,47 @@ spec:
               value: '500'
             - label: '503'
               value: '503'
+    - kind: ListVariable
+      spec:
+        allowAllValue: true
+        allowMultiple: true
+        customAllValue: events|endpoints|endpointslices|leases|tokenreviews|subjectaccessreviews|selfsubjectaccessreviews|selfsubjectrulesreviews
+        defaultValue:
+        - $__all
+        display:
+          description: Select None to show all resource types
+          name: Exclude Resources
+        name: exclude_resource
+        plugin:
+          kind: StaticListVariable
+          spec:
+            values:
+            - label: None (exclude nothing)
+              value: ^$
+            - label: events
+              value: events
+            - label: endpoints
+              value: endpoints
+            - label: endpointslices
+              value: endpointslices
+            - label: leases
+              value: leases
+            - label: tokenreviews
+              value: tokenreviews
+            - label: subjectaccessreviews
+              value: subjectaccessreviews
+            - label: selfsubjectaccessreviews
+              value: selfsubjectaccessreviews
+            - label: selfsubjectrulesreviews
+              value: selfsubjectrulesreviews
+    - kind: TextVariable
+      spec:
+        display:
+          description: Filter by user agent (e.g. oc, kubectl, console). Partial match,
+            case-insensitive.
+          name: Client
+        name: client
+        value: ''
     - kind: TextVariable
       spec:
         display:
