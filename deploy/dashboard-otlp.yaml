@@ -7,6 +7,9 @@ spec:
   config:
     display:
       name: OCP Audit Log Viewer (OTLP)
+      description: 'Filters support regex (e.g. sradco.*, oc|kubectl). Leave empty
+        to match all. LogQL Filter accepts raw stages: |~ "error" (include), !~ "health"
+        (exclude), | user_username!~"bot.*". Use shorter time ranges for faster queries.'
     variables:
     - kind: TextVariable
       spec:
@@ -202,21 +205,58 @@ spec:
                     | line_format "User={{.user_username}} | Verb={{.verb}} | Namespace={{.objectRef_namespace}}
                     | Resource={{.objectRef_resource}} | Resource Name={{.objectRef_name}}
                     | Status={{.responseStatus_code}} | Client={{.userAgent}}" ${filter}'
+      helpPanel:
+        kind: Panel
+        spec:
+          display:
+            name: Usage Guide
+          plugin:
+            kind: Markdown
+            spec:
+              text: '**Filters:** Regex supported (e.g. `username.*`, `oc|kubectl`).
+                Leave empty = match all.
+
+
+                **LogQL Filter:** Raw stage, e.g. `|~ "error"` (include), `!~ "health"`
+                (exclude), `| user_username!~"bot.*"`
+
+
+                **Tip:** Use shorter time ranges for faster queries.'
     layouts:
     - kind: Grid
       spec:
+        display:
+          title: Help
+          collapse:
+            open: false
         items:
         - content:
-            $ref: '#/spec/panels/queryDisplay'
-          height: 3
+            $ref: '#/spec/panels/helpPanel'
+          height: 5
           width: 24
           x: 0
           y: 0
+    - kind: Grid
+      spec:
+        display:
+          title: Active Query
+          collapse:
+            open: false
+        items:
+        - content:
+            $ref: '#/spec/panels/queryDisplay'
+          height: 6
+          width: 24
+          x: 0
+          y: 0
+    - kind: Grid
+      spec:
+        items:
         - content:
             $ref: '#/spec/panels/auditEventsTable'
           height: 20
           width: 24
           x: 0
-          y: 3
+          y: 0
     duration: 1h
     refreshInterval: 0s
