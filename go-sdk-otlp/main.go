@@ -18,21 +18,9 @@ import (
 const (
 	datasourceName = "loki-audit-datasource"
 
-	// OTLP query — no | json needed, uses structured metadata labels directly.
-	// Field names follow the OTLP data model (dots replaced with underscores).
-	auditLogQueryOTLP = `{log_type="audit", openshift_log_source="kubeAPI"}
-  | k8s_user_username!~"${exclude_sa}"
-  | k8s_user_username=~"(?i).*${username}.*"
-  | k8s_audit_event_verb=~"${verb}"
-  | k8s_audit_event_object_ref_resource=~".*${resource}.*"
-  | k8s_audit_event_object_ref_resource!~"${exclude_resource}"
-  | k8s_audit_event_object_ref_namespace=~".*${namespace}.*"
-  | k8s_audit_event_object_ref_name=~"(?i).*${resource_name}.*"
-  | k8s_audit_event_response_code=~"${response_code}"
-  | k8s_audit_event_user_agent=~"(?i).*${client}.*"
-  | line_format "User={{.k8s_user_username}} | Verb={{.k8s_audit_event_verb}} | Namespace={{.k8s_audit_event_object_ref_namespace}} | Resource={{.k8s_audit_event_object_ref_resource}} | Resource Name={{.k8s_audit_event_object_ref_name}} | Status={{.k8s_audit_event_response_code}} | Client={{.k8s_audit_event_user_agent}}"
-  ${filter}
-`
+	// OTLP query: openshift_log_source is a stream label (indexed), avoiding post-filter scan.
+	// Audit fields still require | json until structured metadata extraction lands upstream.
+	auditLogQueryOTLP = `{log_type="audit", openshift_log_source="kubeAPI"} | json | user_username!~"${exclude_sa}" | user_username=~"(?i).*${username}.*" | verb=~"${verb}" | objectRef_resource=~".*${resource}.*" | objectRef_resource!~"${exclude_resource}" | objectRef_namespace=~".*${namespace}.*" | objectRef_name=~"(?i).*${resource_name}.*" | responseStatus_code=~"${response_code}" | userAgent=~"(?i).*${client}.*" | line_format "User={{.user_username}} | Verb={{.verb}} | Namespace={{.objectRef_namespace}} | Resource={{.objectRef_resource}} | Resource Name={{.objectRef_name}} | Status={{.responseStatus_code}} | Client={{.userAgent}}" ${filter}`
 
 	excludeSACustomAllValue = "system:serviceaccount:.*|system:node:.*|system:kube.*|system:openshift.*|system:apiserver.*|system:aggregator.*|system:open-cluster-management:.*|system:ovn-node:.*|system:authenticated.*|system:unauthenticated.*|system:monitoring.*|system:master.*|system:multus.*"
 
@@ -155,7 +143,7 @@ func main() {
 		dashboard.AddVariable("filter",
 			textvariable.Text(`|~ ".*"`,
 				textvariable.DisplayName("LogQL Filter"),
-				textvariable.Description(`Raw LogQL stage. Examples: |~ "sradco" (include), !~ "sradco" (exclude), | k8s_user_username!~"sradco.*"`),
+				textvariable.Description(`Raw LogQL stage. Examples: |~ "sradco" (include), !~ "sradco" (exclude), | user_username!~"sradco.*"`),
 			),
 		),
 
