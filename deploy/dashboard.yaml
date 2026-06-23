@@ -133,8 +133,8 @@ spec:
     - kind: TextVariable
       spec:
         display:
-          description: Additional exclusion regex (e.g. system:hive.*|system:gardener.*)
-          name: Exclude Custom
+          description: Exclude additional users by regex pattern (e.g. bot-.*|ci-runner.*|system:hive.*)
+          name: Exclude Users (regex)
         name: exclude_custom
         value: ''
     - kind: ListVariable
