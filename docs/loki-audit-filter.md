@@ -2,6 +2,45 @@
 
 By default, Kubernetes API audit logs are extremely verbose — most entries come from service accounts, node heartbeats, and watch/proxy operations. Filtering at the collection layer reduces Loki storage costs and improves query performance.
 
+## Prerequisites
+
+- OpenShift Logging 6.x with LokiStack
+- LokiStack schema v13 (for structured metadata support)
+- Recommended: OTLP data model for best query performance (see [Performance Tuning](performance-tuning.md))
+
+## Data Model: OTLP vs ViaQ
+
+OpenShift Logging 6.x supports two data models for storing logs in Loki:
+
+| Model | How to enable | Query performance | Field access |
+|-------|--------------|-------------------|--------------|
+| **OTLP** (recommended) | Add `dataModel: Otel` to output spec | Fast — fields stored as structured metadata, no JSON parsing needed | Use `k8s_user_username`, `k8s_audit_event_object_ref_resource`, etc. |
+| **ViaQ** (default) | No config needed | Slower — requires `\| json` to parse every log line | Use `user_username`, `objectRef_resource`, etc. |
+
+To enable OTLP, add `dataModel: Otel` to your LokiStack output:
+
+```yaml
+outputs:
+  - name: default-lokistack
+    type: lokiStack
+    lokiStack:
+      dataModel: Otel          # enables OTLP structured metadata
+      target:
+        name: logging-loki
+        namespace: openshift-logging
+      authentication:
+        token:
+          from: serviceAccount
+    tls:
+      ca:
+        configMapName: openshift-service-ca.crt
+        key: service-ca.crt
+```
+
+> **Note:** Switching to OTLP changes field names in queries. Historical logs stored in ViaQ format are not converted — only new logs use the OTLP model. See the [OpenShift Logging OTLP docs](https://docs.redhat.com/en/documentation/red_hat_openshift_logging/6.5/html/configuring_logging/configuring-lokistack-otlp) for details.
+
+---
+
 ## Option A: Add to an Existing ClusterLogForwarder
 
 If you already have a `ClusterLogForwarder` with a `kubeAPIAudit` policy filter (common in OpenShift), add `type: drop` filters to catch events the policy misses (e.g. unauthenticated requests with empty usernames, non-complete stages):
@@ -79,6 +118,7 @@ spec:
     - name: default-lokistack
       type: lokiStack
       lokiStack:
+        dataModel: Otel
         target:
           name: logging-loki
           namespace: openshift-logging
@@ -229,8 +269,15 @@ oc exec -n openshift-logging <loki-pod> -- logcli query '{log_type="audit"}' --l
 
 ## Alignment with Dashboard
 
-The dashboard's "Exclude System Users" and "Hide Unauthenticated" filters provide **display-time** filtering on top of what's already collected. The ClusterLogForwarder filters above operate at **collection-time** — events dropped here are never stored in Loki and cannot be queried.
+The dashboard's "Exclude System Users" and "Exclude Resources" filters provide **display-time** filtering on top of what's already collected. The ClusterLogForwarder filters above operate at **collection-time** — events dropped here are never stored in Loki and cannot be queried.
 
 Recommended approach:
 1. Use ClusterLogForwarder filters to drop the bulk of noise (permanent, saves storage)
-2. Use dashboard filters for interactive exploration of what remains
+2. Enable OTLP data model for faster query performance (structured metadata avoids JSON parsing)
+3. Use dashboard filters for interactive exploration of what remains
+
+## References
+
+- [OpenShift Logging OTLP Configuration](https://docs.redhat.com/en/documentation/red_hat_openshift_logging/6.5/html/configuring_logging/configuring-lokistack-otlp)
+- [OpenShift Logging OTLP Data Model](https://docs.redhat.com/en/documentation/red_hat_openshift_logging/6.5/html/configuring_logging/opentelemetry-data-model)
+- [Performance Tuning Guide](performance-tuning.md)
