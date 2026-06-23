@@ -27,22 +27,23 @@ The datasource connects directly to the Loki gateway at:
 | Filter | Type | Description |
 |--------|------|-------------|
 | Username | Free text | Partial match, case-insensitive. Supports regex (e.g. `sradco\|ocohen`) |
-| Exclude System Users | Multi-select dropdown | Deselect to allow specific system users back |
+| Exclude System Users | Multi-select dropdown | Deselect to allow specific system users back. Select "None" to show all. |
 | Verb | Multi-select dropdown | create, update, patch, delete, get, list |
 | Resource | Free text | Kubernetes resource type |
 | Namespace | Free text | Target namespace |
 | Resource Name | Free text | Partial match, case-insensitive |
 | Response Code | Dropdown | HTTP status codes |
-| LogQL Filter | Free text | Regex match on log content (e.g. `secrets\|Forbidden\|system:hive`) |
+| Exclude Resources | Multi-select dropdown | Hide noisy resources (events, endpoints, leases, etc.). Select "None" to show all. |
+| Client | Free text | Filter by user agent (e.g. oc, kubectl, console). Partial match, case-insensitive. |
+| LogQL Filter | Free text | Raw LogQL stage (e.g. `\|~ "sradco"`, `!~ "system:"`, `\| user_username!~"sradco.*"`) |
 
 ## Known Limitations
 
 1. **No columnar display** — log fields shown as formatted text, not separate table columns
-2. **No client filter** — user agent strings too complex for static dropdown matching
-3. **No value mapping** — can't translate status codes/user agents to friendly labels
-4. **No dynamic dropdowns** — no Loki-based variable plugin for populating filters from live data
-5. **No CSV/Excel export**
-6. **Limited result count** — no configurable limit or pagination (Loki default ~100 entries)
+2. **No value mapping** — can't translate status codes/user agents to friendly labels
+3. **No dynamic dropdowns** — no Loki-based variable plugin for populating filters from live data
+4. **No CSV/Excel export**
+5. **Limited result count** — no configurable limit or pagination (Loki default ~100 entries)
 
 See [docs/roadmap.md](docs/roadmap.md) for detailed plans and implementation notes.
 Upstream feature request: [perses/perses#4143](https://github.com/perses/perses/issues/4143)
@@ -59,7 +60,15 @@ go run . > ../deploy/dashboard.json
 ## Docs
 
 - [Recommended Loki audit log filtering](docs/loki-audit-filter.md) — ClusterLogForwarder filters to reduce volume by ~95%
+- [Performance tuning](docs/performance-tuning.md) — improve query speed with stream labels and structured metadata
 - [Roadmap](docs/roadmap.md) — planned improvements blocked on upstream Perses features
+
+## Related Work
+
+- **Observability Operator PR**: [rhobs/observability-operator#1134](https://github.com/rhobs/observability-operator/pull/1134) — contributes this dashboard as a UI plugin
+- **Loki Operator issue**: [grafana/loki#22513](https://github.com/grafana/loki/issues/22513) — add `verb` as default audit stream label (OTLP)
+- **Cluster Logging Operator issue**: [openshift/cluster-logging-operator#3317](https://github.com/openshift/cluster-logging-operator/issues/3317) — add `verb` to default audit labelKeys (ViaQ)
+- **Perses feature request**: [perses/perses#4143](https://github.com/perses/perses/issues/4143) — columnar display, value mapping, dynamic variables
 
 ## LogQL Query
 
@@ -71,9 +80,11 @@ go run . > ../deploy/dashboard.json
   | user_username=~"(?i).*${username}.*"
   | verb=~"${verb}"
   | objectRef_resource=~".*${resource}.*"
+  | objectRef_resource!~"${exclude_resource}"
   | objectRef_namespace=~".*${namespace}.*"
   | objectRef_name=~"(?i).*${resource_name}.*"
   | responseStatus_code=~"${response_code}"
-  |~ "${filter}"
+  | userAgent=~"(?i).*${client}.*"
   | line_format "User={{.user_username}} | Verb={{.verb}} | Namespace={{.objectRef_namespace}} | Resource={{.objectRef_resource}} | Resource Name={{.objectRef_name}} | Status={{.responseStatus_code}} | Client={{.userAgent}}"
+  ${filter}
 ```
