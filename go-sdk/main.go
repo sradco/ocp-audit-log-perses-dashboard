@@ -21,7 +21,6 @@ const (
 	auditLogQuery = `{log_type="audit"}
   | json
   | log_source="kubeAPI"
-  | user_username=~"${hide_unauth}"
   | user_username!~"${exclude_sa}"
   | user_username=~"(?i).*${username}.*"
   | verb=~"${verb}"
@@ -46,16 +45,6 @@ func main() {
 			textvariable.Text("",
 				textvariable.DisplayName("Username"),
 				textvariable.Description("Filter by username (partial match, case-insensitive). Supports regex."),
-			),
-		),
-		dashboard.AddVariable("hide_unauth",
-			listvariable.List(
-				staticlist.StaticList(
-					staticlist.Values(".+", ".*"),
-				),
-				listvariable.DisplayName("Hide Unauthenticated"),
-				listvariable.Description("Exclude audit events with no user identity (e.g. 401 responses)"),
-				listvariable.DefaultValue(".+"),
 			),
 		),
 		dashboard.AddVariable("exclude_sa",
